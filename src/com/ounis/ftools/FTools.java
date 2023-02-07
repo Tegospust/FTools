@@ -9,14 +9,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -26,6 +30,9 @@ import java.util.Properties;
  * @author AndroidAppsPlatform
  */
 public class FTools {
+    
+    private static final String BACKUP_FILE_SUFF = " - kopia";
+    
     /**
      * zwracane z funkcji getFileNumberOfLines() w przypadku niepowodzenia
      */
@@ -205,7 +212,7 @@ public static String getAppPath()
      * @return false nie plik, lub nie można ustalić/true - plik
      */
     public static boolean isFile(String filename) {
-        return filename!=null?new File(filename).isFile():false;
+        return filename!=null ? new File(filename).isFile() : false;
     }
     
     /**
@@ -352,5 +359,76 @@ public static String getAppPath()
             return result;
         }
     }
+    
+//    dodane 07.02.2023
+    /**
+     * Kopiowanie plików:<br>
+     * źródło: https://stackoverflow.com/questions/4004760/fastest-way-to-copy-files-in-java
+     * 
+     * @param source plik zródłowy
+     * @param dest plik docelowy
+     * @throws IOException <font size="4" color="#ff0000">w razie niepowodzenia</font>
+     */
+    public static void copyFileUsingStream(File source, File dest) throws Exception {
+        InputStream is = null;
+        OutputStream os = null;
+//        try {
+            is = new FileInputStream(source);
+            os = new FileOutputStream(dest);
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+//        } finally {
+            if (is != null) {
+                is.close();
+            }
+            else
+                throw new Exception();
+
+            if (os != null) {
+                os.close();
+            }
+            else
+                throw new Exception();
+//        }
+
+    }    
+    
+    /**
+     * tworzy nazwę pliku do zapisu: nazwa_pliku + " - kopia" + rozszerzenie
+     * @param aFileName
+     * @return String
+     */ 
+    public static String makeSaveFileName(String aFileName) {
+//        String fn = aFileName.split("\\.")[0];
+//        String fe = aFileName.split("\\.")[1];
+//        return fn.concat(CONST.BACKUP_FILE_SUFF).concat(".").concat(fe);
+        return aFileName.split("\\.")[0].
+                concat(BACKUP_FILE_SUFF).
+                concat(".").
+                concat(aFileName.split("\\.")[1]);
+    }
+
+    /**
+     * tworzy nazwę pliku do zapisu w oparciu o bieżącą datę i czas
+     * @param aFileName
+     * @return String
+    */
+    public static String makeSaveBackupFileName(String aFileName) {
+        String chunk = (new Date()).toString();
+        chunk = chunk.replace(":", "_");
+        String[] vals = chunk.split(" ");
+        chunk = vals[vals.length-1] + vals[1] + vals[2] + vals[3].replace("_", "");
+//https://stackoverflow.com/questions/8585879/how-to-remove-all-elements-in-string-array-in-java        
+        Arrays.fill(vals, null);
+        vals = new String[0];
+        
+        vals = aFileName.split("\\.");
+        
+        
+        return vals[0] + "_" + chunk + "." + vals[vals.length-1];
+    }    
     
 }
